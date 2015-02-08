@@ -9,7 +9,7 @@ adjust the <b>threshold</b> parameter to change the sensitivity.
 Then simply implement the <b>AudioCallbacks</b> interface on any object you'd like
 to be notified when a beat is detected.
 
-```
+```c#
 public class Example : MonoBehaviour, AudioProcessor.AudioCallbacks{
 void Start()
     {
