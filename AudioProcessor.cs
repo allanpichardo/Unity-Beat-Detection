@@ -18,8 +18,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(AudioSource))]
 public class AudioProcessor : MonoBehaviour
 {
+    private AudioSource audioSource;
+
     private long lastT, nowT, diff, entries, sum;
 
     private List<AudioCallbacks> callbacks;
@@ -41,6 +44,9 @@ public class AudioProcessor : MonoBehaviour
 
     /* storage space */
     private int colmax = 120;
+    float[] spectrum;
+    float[] averages;
+    float[] acVals;
     float[] onsets;
     float[] scorefun;
     float[] dobeat;
@@ -68,6 +74,9 @@ public class AudioProcessor : MonoBehaviour
         onsets = new float[colmax];
         scorefun = new float[colmax];
         dobeat = new float[colmax];
+        spectrum = new float[bufferSize];
+        averages = new float[12];
+        acVals = new float[maxlag];
         alph = 100 * gThresh;
     }
 
@@ -78,7 +87,8 @@ public class AudioProcessor : MonoBehaviour
 
         initArrays();
 
-        samplingRate = audio.clip.frequency;
+        audioSource = GetComponent<AudioSource>();
+        samplingRate = audioSource.clip.frequency;
 
         framePeriod = (float)bufferSize / (float)samplingRate;
 
@@ -119,11 +129,10 @@ public class AudioProcessor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (audio.isPlaying)
+        if (audioSource.isPlaying)
         {
-            float[] spectrum = new float[bufferSize];
-            audio.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
-            float[] averages = computeAverages(spectrum);
+            audioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
+            computeAverages(spectrum);
 
             if (callbacks != null)
             {
@@ -151,7 +160,7 @@ public class AudioProcessor : MonoBehaviour
             // record largest value in (weighted) autocorrelation as it will be the tempo
             float aMax = 0.0f;
             int tempopd = 0;
-            float[] acVals = new float[maxlag];
+            //float[] acVals = new float[maxlag];
             for (int i = 0; i < maxlag; ++i)
             {
                 float acVal = (float)System.Math.Sqrt(auco.autoco(i));
@@ -246,7 +255,7 @@ public class AudioProcessor : MonoBehaviour
         //Debug.Log(r + "," + g + "," + b);
         Color color = new Color(r, g, b);
 
-        camera.clearFlags = CameraClearFlags.Color;
+        GetComponent<Camera>().clearFlags = CameraClearFlags.Color;
         Camera.main.backgroundColor = color;
 
         //camera.backgroundColor = color;
@@ -270,9 +279,8 @@ public class AudioProcessor : MonoBehaviour
         return i;
     }
 
-    public float[] computeAverages(float[] data)
+    public void computeAverages(float[] data)
     {
-        float[] averages = new float[12];
         for (int i = 0; i < 12; i++)
         {
             float avg = 0;
@@ -294,8 +302,6 @@ public class AudioProcessor : MonoBehaviour
             avg /= (hiBound - lowBound + 1);
             averages[i] = avg;
         }
-
-        return averages;
     }
 
     float map(float s, float a1, float a2, float b1, float b2)
