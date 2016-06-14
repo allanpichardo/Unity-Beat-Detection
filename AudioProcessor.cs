@@ -25,7 +25,7 @@ public class AudioProcessor : MonoBehaviour
 
     private long lastT, nowT, diff, entries, sum;
 
-    private List<AudioCallbacks> callbacks;
+    private List<AudioCallbacks> callbacks = new List<AudioCallbacks>();
 
     public int bufferSize = 1024; // fft size
     private int samplingRate = 44100; // fft sampling frequency
@@ -83,8 +83,6 @@ public class AudioProcessor : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        callbacks = new List<AudioCallbacks>();
-
         initArrays();
 
         audioSource = GetComponent<AudioSource>();
